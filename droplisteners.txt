@@ -1,0 +1,47 @@
+manageTabs:
+
+function(tab,noSwitch)
+{
+var tabs=['default','slider','video'];
+var tabIndicesToShow = [];
+var index=tabs.indexOf(tab);if(index==-1) return;
+
+for(var i=1;i<4;i++){
+	this.hideTabStripItem(i);
+}
+switch(tab){
+	case 'slider':
+		tabIndicesToShow.push(1);
+		tabIndicesToShow.push(2);
+		break;
+	case 'video':
+		tabIndicesToShow.push(3);
+	break;
+	default:
+		tabIndicesToShow.push(0);
+}
+
+for(var i=0; i<tabIndicesToShow.length; i++){
+	this.unhideTabStripItem(tabIndicesToShow[i]);
+}
+this.doLayout();
+if(!noSwitch){
+	if('slider' === tab){
+		this.activate(1);
+	}else if('video' === tab){
+		this.activate(3);
+	}
+}
+}
+
+load content
+
+function(box){
+box.findParentByType('tabpanel').manageTabs(this.getValue(),false);
+}
+
+selectionchanged
+
+function(box,value){
+box.findParentByType('tabpanel').manageTabs(value,false);
+}
