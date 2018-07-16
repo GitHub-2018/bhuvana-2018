@@ -1,0 +1,34 @@
+As we know in AEM, content will be stored under jcr (java content repository). So what ever we submit in the page that will be stored under the jcr content of that particulat page.
+
+So we use sling framework to access the content repository over http protocol. what it does is it will map the request url to the corresponding node in the content repository.
+
+Example:
+
+
+Components: We can say like components are reusable modules that will implement the specific application logic to render the content of a website. We can say component is a collection of jsp's html or servelects js etc.
+
+
+How to create a component and the naming convention to follow:
+
+
+Sling resourceType: This is a path, which locates the script to be used for rendering the content
+
+Sling Resource SuperType: this is nothing but inheritance. Suppose u have 2 components c1 and c2. Now for the c1 component I have given sling resource super type as wcm/foundation/components/page which is out of box page component. Now for c2 i have given sling reource super type as path of the c1. which means c2 will inherit all the properties of c1.
+
+Allowed Paths:
+
+ It's value will be the path under which this template will be visible for page creation in siteadmin. 
+
+Allowed Templates:  It's value will be the path of templates those will be visible for page creation under current page in siteadmin.
+
+Allowed Parents:
+
+It's value will be the path of templates those can behave as the parent of this template at the time of page creation in siteadmin.
+
+allowedChildren
+
+ It's value will be the path of the templates those are allowed or visible for page creation under this template in siteadmin. 
+
+
+Folder Names: should be in lower case and can seperated by -
+component and template Label and title: Label: lowercase and _, -, number are allowed 
