@@ -1,0 +1,100 @@
+<%--
+/**
+ * Copyright(c) JH Insurance
+ * Program Name  : addtag
+ * Application   : JH Insurance Website
+ * Description   : To search page/asset based on firm authored and add a new firm tag for the each result.
+ * Database used : none
+
+ * Modification History:
+ * -----------------------
+ * Date       Modified by         Modification Description
+ *-----------   -------------------    --------------------
+    20-july-2016  Cognizant Technology Solutions  initial creation
+    ------------- -------------------------  -----------------------
+ **/ 
+--%>
+<%
+	
+%><%@include file="/libs/foundation/global.jsp"%>
+<%@page session="false"%>
+<%@page
+	import="com.day.cq.tagging.Tag,com.day.cq.tagging.TagManager,java.util.HashMap,java.util.Map,com.day.cq.search.Query,com.day.cq.search.QueryBuilder,com.day.cq.search.result.Hit,com.day.cq.search.result.SearchResult,javax.jcr.Session,com.day.cq.search.PredicateGroup"%>
+<%@page
+	import="com.day.cq.replication.ReplicationStatus,com.day.cq.replication.Replicator,com.day.cq.replication.ReplicationActionType"%>
+<c:set var="path" value="${properties.path}" />
+<c:set var="referencePath" value="${properties.referencePath}" />
+<c:if test="${empty path}">
+	<div data-emptytext="CTA Text Component" class="cq-placeholder"></div>
+</c:if>
+<c:if test="${not empty path}">
+	<%
+		Replicator replicator = sling.getService(Replicator.class);
+			QueryBuilder queryBuilder = resourceResolver.adaptTo(QueryBuilder.class);
+			Session session = resourceResolver.adaptTo(Session.class);
+			String pathval = (String) pageContext.getAttribute("path");
+			String referencePathValue = (String) pageContext.getAttribute("referencePath");
+			String resourcePath;
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("path", pathval);
+			map.put("type", "cq:Page");
+			map.put("p.limit", "-1");
+			Query query = queryBuilder.createQuery(PredicateGroup.create(map), session);
+			int i = 0;
+			if (!query.equals(null) && referencePathValue != null) {
+				referencePathValue = referencePathValue + "/jcr:content/articlepar/richtexteditor";
+				if (referencePathValue != null) {
+					SearchResult searchRes = query.getResult();
+					if (!searchRes.getHits().isEmpty()) {
+						for (Hit hit : searchRes.getHits()) {
+							String pagepath = hit.getPath();
+							Node articleNode = resourceResolver.getResource(pagepath).adaptTo(Node.class);
+							if (articleNode.hasNode("jcr:content")) {
+								Node jcrNode = articleNode.getNode("jcr:content");
+								if (jcrNode.hasNode("articlepar")) {
+									Node articleparnode = jcrNode.getNode("articlepar");
+									if (!articleparnode.hasNode("reference")) {
+										articleparnode.addNode("reference", "nt:unstructured");
+										Node referenceNode = articleparnode.getNode("reference");
+										referenceNode.setProperty("path", referencePathValue);
+										referenceNode.setProperty("sling:resourceType",
+												"JhRewardsLife/components/content/reference");
+									} else {
+										Node referenceNode = articleparnode.getNode("reference");
+										referenceNode.setProperty("path", referencePathValue);
+										referenceNode.setProperty("sling:resourceType",
+												"JhRewardsLife/components/content/reference");
+									}
+
+									if (articleparnode.hasNode("disclosure")
+											&& articleparnode.hasNode("reference")) {
+										articleparnode.orderBefore("reference", "disclosure");
+										replicator.replicate(session,ReplicationActionType.ACTIVATE,pagepath);
+									} else if (articleparnode.hasNode("diclaimerText")
+											&& articleparnode.hasNode("reference")) {                       
+										articleparnode.orderBefore("reference", "diclaimerText");
+										replicator.replicate(session,ReplicationActionType.ACTIVATE,pagepath);
+									} else {
+										articleparnode.orderBefore("reference", null);
+
+									}
+									if (articleparnode.hasNode("mlinumber")
+											&& !articleparnode.hasNode("disclosure")&& !articleparnode.hasNode("diclaimerText")) {                       
+										articleparnode.orderBefore("reference", "mlinumber");
+										replicator.replicate(session, ReplicationActionType.ACTIVATE, pagepath);
+									}
+
+								}
+							}
+						}
+					}
+					session.save();
+				} else {
+					out.println("No Reference Path Found");
+				}
+
+			} else {
+				out.println("No Reference Path Found");
+			}
+	%>
+</c:if>
